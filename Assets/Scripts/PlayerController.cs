@@ -98,6 +98,7 @@ public class PlayerController : MonoBehaviour
 
         anim.SetFloat("Speed", Mathf.Abs(horizontalInput));
         anim.SetBool("IsGrounded", isGrounded);
+        anim.SetFloat("yVelocity", rb.linearVelocity.y);
         /*
         the animation occurs using a FSM. Each state -> One animation (Ex running)
         transitions -> conditions
