@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -13,31 +14,37 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce = 12f;
     [SerializeField] private int startingHealth = 100;
 
-    [SerializeField] private Transform groundCheck; 
+    [SerializeField] private Transform groundCheck;
     /*Transform is a component that every game object posseses and is undeletable. It holds the following attributes:
     1. Position (x,y) -> This is used to check whether the user's child object (his "feet") are actually touching the ground
     2. Rotation
     3. Scale*/
     [SerializeField] private float groundCheckRadius = 0.2f;
-    [SerializeField] private LayerMask groundLayer; 
+    [SerializeField] private LayerMask groundLayer;
     /*
     LayerMask is a 32-bit integer. We have assigned the 6th slot in this 32-bit integer the ground layer. 
     during every frame rendering, the engine checks whether the players child object is touching the ground layer(we configure this). 
     */
-    [SerializeField] private float fallMultiplier = 2.5f; 
+    [SerializeField] private float fallMultiplier = 2.5f;
     /* Issue: As the player comes down after jumping, it comes down as if it is as light as a feather.
     Reason : jumps at a force of 15 units, gravity pulls him down at 9.8 something m/s, it takes him around 1.5 sec
     for the gravity to cancel the momentum.
     Fix: as the character begins his descent, increase the pull of gravity on the character by a factor of 2.5 (9.8 x 2.5f), so
     that he comes down fast. */
     [SerializeField] private float defaultGravityScale;
+
+    [SerializeField] private float dashVelocity = 14f;
+    [SerializeField] private float dashCooldown = 1f;
+    [SerializeField] private float dashTime = 0.2f;
+    private bool canDash = true;
+    private bool isDashing = false;
     private Rigidbody2D rb;
     private Animator anim;
     private float currentSpeed;
     private float horizontalInput;
-    private bool jumpRequested; 
+    private bool jumpRequested;
     private bool isGrounded;
-    private bool isfacingRight = true; 
+    private bool isfacingRight = true;
     public int CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
 
     void Start()
@@ -50,6 +57,10 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (isDashing)
+        {
+            return;
+        }
         //update is an Event Function that comes from MonoBehaviour. 
         /*
         we dont use override for Event Functions even though we are technically overriding the Update
@@ -74,7 +85,7 @@ public class PlayerController : MonoBehaviour
         {
             Flip(); //same logic
         }
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Z) && isGrounded)
         {
             jumpRequested = true;
         }
@@ -86,7 +97,22 @@ public class PlayerController : MonoBehaviour
         You dont use Axes for jumping, because as long as the user presses w, or up arrow, the character will
         keep flying. :)
         */
+        if (Input.GetKeyDown(KeyCode.C) && canDash)
+        {
+            /*
+            Coroutines are very simple. They are simply functions with a yield statement inside.
 
+A yield statement stops processing at that point and waits until the next frame before continuing from where it was.
+
+Yield WaitForSeconds does the same thing but waits for a certain number of seconds before continuing.
+
+Where do you use them? Anywhere this functionality proves useful. Imagine you need to generate 1000 objects and doing them all in one frame causes a stutter. Simply create a for loop and put a yield inside it and only one object is created per frame.
+
+Maybe you want to regenerate shields, but instead of doing it once per frame, you can create a coroutine with 'Yield WaitForSeconds(0.25)' and it will only happen once every quarter second.
+
+Need to test something is happening but you don't need to test it every frame? Create a coroutine that checks once per second*/
+            StartCoroutine(Dash());
+        }
         if (rb.linearVelocity.y < 0.1f)
         {
             rb.gravityScale = defaultGravityScale * fallMultiplier;
@@ -110,7 +136,11 @@ public class PlayerController : MonoBehaviour
     }
     void FixedUpdate()
     {
-        rb.linearVelocity = new Vector2(horizontalInput * moveSpeed , rb.linearVelocity.y);
+        if (isDashing)
+        {
+            return;
+        }
+        rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
         if (jumpRequested)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
@@ -120,15 +150,31 @@ public class PlayerController : MonoBehaviour
     private void Flip()
     {
         isfacingRight = !isfacingRight;
-        Vector3 localScale = transform.localScale; 
+        Vector3 localScale = transform.localScale;
         /*transform is a pointer to Transform inherited from monobehavoir class. 
          vector3 -> x,y,z. 
           imagine a  character inside a moving car.
           the character's global scale -> constantly changing
           the character's local scale which wold be relative to the car, will stay constant. */
-        localScale.x *=-1f;
+        localScale.x *= -1f;
         transform.localScale = localScale;
         /* you essentially flipped the x-axis: 1 became -1 and vice versa*/
+
+    }
+    private IEnumerator Dash()
+    {
+        canDash = false;
+        isDashing = true;
+        anim.SetBool("IsDashing", true);
+        rb.gravityScale = 0f;
+        rb.linearVelocity = new Vector2(transform.localScale.x * dashVelocity, 0f);
+        yield return new WaitForSeconds(dashTime);
+
+        rb.gravityScale = defaultGravityScale;
+        isDashing = false;
+        anim.SetBool("IsDashing", false);
+        yield return new WaitForSeconds(dashCooldown);
+        canDash = true;
 
     }
     void OnDrawGizmos()
@@ -137,13 +183,13 @@ public class PlayerController : MonoBehaviour
         {
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
-        }      
+        }
         //This is just for debugging purposes. it will be scrapped. Hopefully...
     }
     public void TakeDamage(int damage)
     {
-        CurrentHealth -= damage; 
-        if (CurrentHealth <=0 )
+        CurrentHealth -= damage;
+        if (CurrentHealth <= 0)
         {
             Die();
         }
