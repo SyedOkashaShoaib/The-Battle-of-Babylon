@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -7,9 +8,22 @@ public class PlayerController : MonoBehaviour
 /*You inherit the following functionalities:
 1. Your class becomes a component. This is what allows your class to be assosiated with an object. 
 2. Gives access to Event Hooking.
-3. 
+3. a bunch more stuff i didnt understand :)
 */
 {
+    [SerializeField] public bool isAttacking = false;
+
+
+    [SerializeField] private float slideVelocity = 12f;
+    [SerializeField] private float slideTime = 0.4f;
+    [SerializeField] private bool isSliding = false;
+    [SerializeField] private bool canSlide = true;
+    [SerializeField] private float slideCoolDown = 0.5f;
+    private BoxCollider2D boxColl;
+    [SerializeField] private Vector2 defaultBoxColliderSize;
+    [SerializeField] private Vector2 defaultBoxColliderOffset; //distance from knights center to the box's center.
+    [SerializeField] private Vector2 slideColliderSize = new Vector2(2.292646f, 0.7163899f);
+    [SerializeField] private Vector2 slideColliderOffset = new Vector2(0.7594995f, -1.583324f);
     [SerializeField] private float moveSpeed = 8f;
     [SerializeField] private float jumpForce = 12f;
     [SerializeField] private int startingHealth = 100;
@@ -57,11 +71,17 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>(); //returns a pointer to the rigidbody2d component. 
         anim = GetComponent<Animator>();
         defaultGravityScale = rb.gravityScale;
+        boxColl = GetComponent<BoxCollider2D>();
+        defaultBoxColliderSize = boxColl.size;
+        defaultBoxColliderOffset = boxColl.offset;
     }
 
     void Update()
     {
-
+        if (isSliding || isAttacking)
+        {
+            return;
+        }
         //update is an Event Function that comes from MonoBehaviour. 
         /*
         we dont use override for Event Functions even though we are technically overriding the Update
@@ -124,8 +144,12 @@ public class PlayerController : MonoBehaviour
         You dont use Axes for jumping, because as long as the user presses w, or up arrow, the character will
         keep flying. :)
         */
-        
- 
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canSlide && isGrounded)
+        {
+            // Debug.Log("plz work..");
+            StartCoroutine(Slide());
+        }
 
         if (rb.linearVelocity.y < 0.1f)
         {
@@ -150,6 +174,10 @@ public class PlayerController : MonoBehaviour
     }
     void FixedUpdate()
     {
+        if (isSliding || isAttacking)
+        {
+            return;
+        }
 
         rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
         if (jumpRequested)
@@ -171,6 +199,25 @@ public class PlayerController : MonoBehaviour
         transform.localScale = localScale;
         /* you essentially flipped the x-axis: 1 became -1 and vice versa*/
 
+    }
+    private IEnumerator Slide()
+    {
+        canSlide = false;
+        isSliding = true;
+        anim.SetBool("IsSliding", true);
+
+        boxColl.size = slideColliderSize;
+        boxColl.offset = slideColliderOffset;
+        rb.linearVelocity = new Vector2(transform.localScale.x * slideVelocity, rb.linearVelocity.y);
+
+        yield return new WaitForSeconds(slideTime);
+        boxColl.size = defaultBoxColliderSize;
+        boxColl.offset = defaultBoxColliderOffset;
+
+        isSliding = false;
+        anim.SetBool("IsSliding", false);
+        yield return new WaitForSeconds(slideCoolDown);
+        canSlide = true;
     }
 
     void OnDrawGizmos()
