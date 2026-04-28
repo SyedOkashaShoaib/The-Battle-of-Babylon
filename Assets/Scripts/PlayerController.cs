@@ -26,7 +26,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Vector2 slideColliderOffset = new Vector2(0.7594995f, -1.583324f);
     [SerializeField] private float moveSpeed = 8f;
     [SerializeField] private float jumpForce = 12f;
-    [SerializeField] private int startingHealth = 100;
+    [SerializeField] private float startingHealth = 100f;
 
     [SerializeField] private Transform groundCheck;
     /*Transform is a component that every game object posseses and is undeletable. It holds the following attributes:
@@ -61,9 +61,15 @@ public class PlayerController : MonoBehaviour
     private float currentSpeed;
     private float horizontalInput;
     private bool jumpRequested;
+<<<<<<< HEAD
     public bool isGrounded;
-    private bool isfacingRight = true;
+    public bool isfacingRight = true;
     public int CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
+=======
+    private bool isGrounded;
+    public bool isfacingRight = true;
+    public float CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
+>>>>>>> origin/Boss_branch
 
     void Start()
     {
@@ -233,12 +239,14 @@ public class PlayerController : MonoBehaviour
         }
         //This is just for debugging purposes. it will be scrapped. Hopefully...
     }
-    public void TakeDamage(int damage)
+
+    public void TakeDamage(float damage)
     {
         CurrentHealth -= damage;
-        if (CurrentHealth <= 0)
+        Debug.Log("Damege Taken. Current Health : " + CurrentHealth);
+        if (CurrentHealth <= 0f)
         {
-            Die();
+            // Handle Death
         }
     }
 
@@ -246,6 +254,8 @@ public class PlayerController : MonoBehaviour
     {
         //die die die.
     }
+
+
 }
 /*How animation fo sprites works in unity:
 Sprite Renderer: Naturally "dumb" -? It renders a single image on the canvas. 
