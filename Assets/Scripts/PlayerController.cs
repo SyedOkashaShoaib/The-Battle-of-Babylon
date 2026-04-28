@@ -63,7 +63,7 @@ public class PlayerController : MonoBehaviour
     private bool jumpRequested;
     public bool isGrounded;
     private bool isfacingRight = true;
-    public int CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
+    public float CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
 
     void Start()
     {
@@ -233,12 +233,13 @@ public class PlayerController : MonoBehaviour
         }
         //This is just for debugging purposes. it will be scrapped. Hopefully...
     }
-    public void TakeDamage(int damage)
+ public void TakeDamage(float damage)
     {
         CurrentHealth -= damage;
-        if (CurrentHealth <= 0)
+        Debug.Log("Damege Taken. Current Health : " + CurrentHealth);
+        if (CurrentHealth <= 0f)
         {
-            Die();
+            // Handle Death
         }
     }
 
