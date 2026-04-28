@@ -78,6 +78,10 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        anim.SetFloat("Speed", Mathf.Abs(horizontalInput));
+        anim.SetBool("IsGrounded", isGrounded);
+        anim.SetFloat("yVelocity", rb.linearVelocity.y);
         if (isSliding || isAttacking)
         {
             return;
@@ -91,7 +95,7 @@ public class PlayerController : MonoBehaviour
         the computer with faster frame rate will calculate the physics faster as compared to one
         with slower frame rate. 
         */
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+
         /*
         groundCheck.position -> You pass the coordinates.
         groundCheckRadius -> You pass how large the child object is
@@ -119,7 +123,7 @@ public class PlayerController : MonoBehaviour
         {
             coyoteTimeCounter -= Time.deltaTime;
         }
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W))
         {
             jumpBufferCounter = jumpBufferTime;
 
@@ -160,9 +164,9 @@ public class PlayerController : MonoBehaviour
             rb.gravityScale = defaultGravityScale;
         }
 
-        anim.SetFloat("Speed", Mathf.Abs(horizontalInput));
-        anim.SetBool("IsGrounded", isGrounded);
-        anim.SetFloat("yVelocity", rb.linearVelocity.y);
+        // anim.SetFloat("Speed", Mathf.Abs(horizontalInput));
+        // anim.SetBool("IsGrounded", isGrounded);
+        // anim.SetFloat("yVelocity", rb.linearVelocity.y);
         /*
         the animation occurs using a FSM. Each state -> One animation (Ex running)
         transitions -> conditions
