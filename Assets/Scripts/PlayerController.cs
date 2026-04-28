@@ -64,9 +64,9 @@ public class PlayerController : MonoBehaviour
 <<<<<<< HEAD
     public bool isGrounded;
     public bool isfacingRight = true;
-    public int CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
+    public float CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
 =======
-    private bool isGrounded;
+    public bool isGrounded;
     public bool isfacingRight = true;
     public float CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
 >>>>>>> origin/Boss_branch
