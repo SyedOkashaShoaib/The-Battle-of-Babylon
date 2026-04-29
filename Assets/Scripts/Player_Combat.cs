@@ -9,7 +9,7 @@ public class Player_Combat : MonoBehaviour
     private PlayerController playerController;
 
     [SerializeField] private float plungeShockWaveRadius = 2.5f;
-    [SerializeField] private int plungeDamage = 25;
+    [SerializeField] private int plungeDamage = 5;
     [SerializeField] private float plungeVelocity = 25f;
     [SerializeField] private bool isPlunging = false;
     [SerializeField] private int currentAttackPhase = 0;
@@ -76,7 +76,7 @@ public class Player_Combat : MonoBehaviour
 
         foreach (Collider2D enemy in hitEnemies)
         {
-            EnemyHealth healthscript = enemy.GetComponent<EnemyHealth>();
+            Boss_stats healthscript = enemy.GetComponent<Boss_stats>();
             if (healthscript != null)
             {
                 healthscript.TakeDamage(plungeDamage);
@@ -112,25 +112,25 @@ public class Player_Combat : MonoBehaviour
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayer);
         foreach (Collider2D enemy in hitEnemies)
         {
-            EnemyHealth healthScript = enemy.GetComponent<EnemyHealth>();
+            Boss_stats healthScript = enemy.GetComponent<Boss_stats>();
 
             if (healthScript != null)
             {
-                int damage = 0;
-                if (currentAttackPhase == 1)
-                {
-                    damage = 10;
+                // int damage = 0;
+                // if (currentAttackPhase == 1)
+                // {
+                //     damage = 10;
 
-                }
-                else if (currentAttackPhase == 2)
-                {
-                    damage = 15;
-                }
-                else if (currentAttackPhase == 3)
-                {
-                    damage = 20;
-                }
-                healthScript.TakeDamage(damage);
+                // }
+                // else if (currentAttackPhase == 2)
+                // {
+                //     damage = 15;
+                // }
+                // else if (currentAttackPhase == 3)
+                // {
+                //     damage = 20;
+                // }
+                healthScript.TakeDamage(3);
             }
         }
     }

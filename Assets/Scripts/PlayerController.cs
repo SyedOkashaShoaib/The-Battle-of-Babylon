@@ -11,6 +11,10 @@ public class PlayerController : MonoBehaviour
 3. a bunch more stuff i didnt understand :)
 */
 {
+
+    [SerializeField] private float doubleJumpForce = 10f; 
+    [SerializeField] private bool canDoubleJump = false;
+    private bool doubleJumpRequested = false;
     [SerializeField] public bool isAttacking = false;
 
 
@@ -61,15 +65,9 @@ public class PlayerController : MonoBehaviour
     private float currentSpeed;
     private float horizontalInput;
     private bool jumpRequested;
-<<<<<<< HEAD
     public bool isGrounded;
     public bool isfacingRight = true;
     public float CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
-=======
-    public bool isGrounded;
-    public bool isfacingRight = true;
-    public float CurrentHealth { get; private set; } //get-> make the getter public. priv set-> private setter. C# automatically creates the getters/ setters.
->>>>>>> origin/Boss_branch
 
     void Start()
     {
@@ -119,7 +117,7 @@ public class PlayerController : MonoBehaviour
         if (isGrounded)
         {
             coyoteTimeCounter = coyoteTime;
-
+            canDoubleJump = true;
             if (!jumpRequested && rb.linearVelocity.y <= 0.1f)
             {
                 anim.ResetTrigger("Jump"); //idk what this line does lol. 
@@ -145,6 +143,16 @@ public class PlayerController : MonoBehaviour
             anim.SetTrigger("Jump");
             jumpBufferCounter = 0;
             coyoteTimeCounter = 0;
+        }
+        else if ((Input.GetKeyDown(KeyCode.W) ||Input.GetKeyDown(KeyCode.Space) ) && coyoteTimeCounter <= 0f && canDoubleJump)
+        {
+
+            canDoubleJump = false; // Spend the bullet
+            jumpBufferCounter = 0; // Kill the buffer so it doesn't bleed into a ground jump later
+            
+            doubleJumpRequested = true;
+            
+            anim.SetTrigger("DoubleJump"); // Send the signal to the Animator
         }
         // Through this Update is listening to the keystrokes of the user. 
         /*
@@ -192,8 +200,13 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
         if (jumpRequested)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x *1.2f, jumpForce);
             jumpRequested = false;
+        }
+        if (doubleJumpRequested)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, doubleJumpForce);
+            doubleJumpRequested = false;
         }
     }
     private void Flip()

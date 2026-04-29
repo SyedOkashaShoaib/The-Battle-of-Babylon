@@ -111,6 +111,10 @@ public class OrbManager : MonoBehaviour
 
     void Update()
     {
+        if (boss.queenisDead && isActive)
+        {
+            Deactivate();
+        }
         if (!isActive) return;
 
         timer += Time.deltaTime;

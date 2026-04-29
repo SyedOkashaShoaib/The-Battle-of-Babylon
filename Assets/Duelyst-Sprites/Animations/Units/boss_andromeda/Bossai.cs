@@ -71,7 +71,7 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
 
     private Dictionary<BossPhase, PhaseConfig> phaseTable; // phase stats. Normal, Aggressive, Rage. I realize now that the third one should've been God of War
 
-    private Transform player;
+    private Transform player; 
     private float globalCooldownTimer = 999f; // uhh this is random. boss will be ready to attack as soon as game starts
     private AttackSlot lastUsedSlot = null; // for weight 
     private bool phaseTransitioning = false; 
@@ -88,6 +88,7 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
 
     void Start()
     {
+        Debug.Log("START");
         anim = GetComponent<Animator>();
         orbManager = GetComponent<OrbManager>();
         rb = GetComponent<Rigidbody2D>();
@@ -162,6 +163,7 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
 
     void BuildPhaseTable()
     {
+        Debug.Log("Phase table");
         phaseTable = new Dictionary<BossPhase, PhaseConfig>
         {
             [BossPhase.Normal] = new PhaseConfig
@@ -210,7 +212,16 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
 
     void Update()
     {
-        if (player == null) return;
+        if (bossStats.queenisDead)
+        {
+            
+            return;
+        }
+        if (player == null)
+        {
+            Debug.Log("player is null");
+            return;
+        } 
 
         float dt = Time.deltaTime;
         float distance = Vector2.Distance(transform.position, player.position);
@@ -275,7 +286,7 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
         slotRetreat.Tick(dt);
     }
 
-    List<AttackSlot> GetLegalMoves(float distance)
+List<AttackSlot> GetLegalMoves(float distance)
     {
         var legal = new List<AttackSlot>();
 
@@ -292,11 +303,6 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
             if (!phaseOK) continue;
 
             // Constraint 3: Attack-specific hard gates
-            //   Melee    — only if player is within melee range
-            //   OrbitThrow — only if orbs are currently active
-            //   Retreat  — only if player is uncomfortably close
-            //   Chase    — only if boss is not already in melee range
-            //              (no point chasing when already close enough)
             if (slot.action == BossAction.MeleeBurst && distance > meleeMaxRange) continue;
             //if (slot.action == BossAction.OrbitThrow && !orbManager.OrbsAreActive()) continue;
             if (slot.action == BossAction.Retreat && distance > retreatThreshold) continue;
@@ -322,11 +328,10 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
 
         foreach (var slot in legal)
         {
-            // RangeBonus — rewards using the attack at its ideal distance
-            float rangeDelta = Mathf.Abs(distance - slot.idealRange);
-            float rangeBonus = Mathf.Max(0f, 25f - rangeDelta * 1.8f);
+            float rangeDelta = Mathf.Abs(distance - slot.idealRange); 
+            float rangeBonus = Mathf.Max(0f, 25f - rangeDelta * 1.8f); // highest at ideal, otherwise linearly decreases based on gap
 
-            // RecencyPenalty — prevents immediate re-use
+            // kills Recency bias
             float recency = (lastUsedSlot == slot) ? 25f : 0f;
 
             // Movement slots get a situational bonus:
@@ -336,13 +341,13 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
             if (slot.action == BossAction.Chase)
                 situational = Mathf.Clamp((distance - meleeMaxRange) * 1.5f, 0f, 20f);
             if (slot.action == BossAction.Retreat)
-                situational = Mathf.Clamp((retreatThreshold - distance) * 3f, 0f, 20f);
+                situational = Mathf.Clamp((retreatThreshold - distance) * 3f, 0f, 10f);
 
-            // Attacks score higher than movement unless movement is very urgent
+            // makes the boss more aggressive
             float actionBonus = (slot.action == BossAction.Chase || slot.action == BossAction.Retreat)
                                  ? 0f : 15f;
 
-            float jitter = Random.Range(0f, 8f);
+            float jitter = Random.Range(0f, 11f);
 
             float score = (slot.baseDamageValue + rangeBonus + situational + actionBonus)
                           * pressure
@@ -358,7 +363,6 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
 
         return bestSlot;
     }
-
     void ExecuteAction(BossAction action, float distance)
     {
         // Determine which slot was chosen (for timer reset + recency)
@@ -536,7 +540,7 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
 
     void StartPhaseTransition(BossPhase newPhase)
     {
-        phaseTransitioning = true;
+        // phaseTransitioning = true;
         bossStats.currentPhase = newPhase;
         ApplyPhaseConfig(newPhase);
         intentQueue.Clear();        // cancel any queued combo on phase shift
@@ -545,11 +549,11 @@ public class Bossai : MonoBehaviour // changing the goofy looking class name bre
         // anim.SetTrigger("PhaseShift"); No animation for phase change unfortunately
     }
 
-    //public void OnPhaseTransitionComplete()
-    //{
-    //    phaseTransitioning = false;
-    //    CancelInvoke(nameof(OnPhaseTransitionComplete));
-    //}
+    public void OnPhaseTransitionComplete()
+    {
+       phaseTransitioning = false;
+       CancelInvoke(nameof(OnPhaseTransitionComplete));
+    }
 
     void FacePlayer()
     {
