@@ -105,7 +105,7 @@ The current example: after `OrbitActivate`, the boss immediately queues a `Chase
 
 ---
 
-## 👥 Credits
+## Credits
 
 This game is a collaborative effort, but credit needs to go where it's due.
 
